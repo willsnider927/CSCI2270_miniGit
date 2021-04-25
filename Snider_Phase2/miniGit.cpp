@@ -13,6 +13,7 @@ commitNode* createCommitNode(int commitNum, miniGitFiles* head, commitNode* prev
     newNode->commitNumber = commitNum;
     newNode->head = head;
     newNode->next = NULL;
+    return newNode;
 }
 
 void miniGit::init() {
@@ -22,8 +23,27 @@ void miniGit::init() {
     fs::create_directory(".minigit");
 }
 
+void miniGit::delGit() {
+    if(head == NULL) return;
+    commitNode* nexCommit;
+    miniGitFiles* nexFile;
+    for (commitNode* it = head; it != NULL; it = nexCommit) {
+        nexCommit = it->next;
+        for (miniGitFiles* it2 = it->head; it2 != NULL; it2 = nexFile) {
+            nexFile = it2->next;
+            delete it2;
+        }
+        delete it;
+    }
+    fs::remove_all(".minigit");
+}
+
 
 void miniGit::addFile() {
+    if (!head) {
+        cout << "No repository to add to." << endl;
+        return;
+    }
     if (currVersion->previous != versionNode && currVersion->previous != NULL) {
         cout << "Return to most recent commit first" << endl;
         return;
@@ -31,7 +51,7 @@ void miniGit::addFile() {
     string fileName;
     cout << "Enter the file name to be added." << endl;
     cin >> fileName;
-    while (!fs::exists("./"+fileName)) {
+    while (!fs::exists(fileName)) {
         cout << "File not found, try again." << endl;
         cin >> fileName;
     } //check for valid file name
@@ -63,7 +83,11 @@ void miniGit::addFile() {
 
 
 void miniGit::removeFile() {
-    if (currVersion->previous != versionNode && currVersion->previous != NULL) {
+    if (!head) {
+        cout << "No repository to remove from." << endl;
+        return;
+    }
+    if (currVersion->previous != versionNode && currVersion->previous != NULL) { //make sure they are currently on the right version
         cout << "Return to most recent commit first" << endl;
         return;
     }
@@ -73,7 +97,7 @@ void miniGit::removeFile() {
     }
 
     string fileName;
-    cout << "Enter the file name to be added." << endl;
+    cout << "Enter the file name to be removed." << endl;
     cin >> fileName;
 
     miniGitFiles* fileNode = currVersion->head;
@@ -112,6 +136,10 @@ miniGitFiles* copyLL(miniGitFiles* root) { //helper function to return identical
 }
 
 void miniGit::commit() {
+    if (!head) {
+        cout << "No repository to commit to." << endl;
+        return;
+    }
     if (currVersion->previous != versionNode && currVersion->previous != NULL) {
         cout << "Return to most recent commit first" << endl;
         return;
@@ -122,8 +150,8 @@ void miniGit::commit() {
     }
     for (miniGitFiles* it = currVersion->head; it != NULL; it = it->next) { //iterate through LL of current versions files
         ifstream currFile(it->fileName); //open the current file
-        if (!fs::exists("./.minigit/" + it->fileVersion)) { //if not present in minigit
-            ofstream newGitFile("./.minigit/"+it->fileVersion); //create the output file
+        if (!fs::exists(".minigit/" + it->fileVersion)) { //if not present in minigit
+            ofstream newGitFile(".minigit/"+it->fileVersion); //create the output file
             string text;
             
             while(getline(currFile,text)) {
@@ -131,7 +159,7 @@ void miniGit::commit() {
             }
         }
         else {
-            ifstream prevVersion("./.minigit/" + it->fileVersion);
+            ifstream prevVersion(".minigit/" + it->fileVersion);
             bool same = 1;
             string prevText, currText;
             while (getline(prevVersion,prevText)) {
@@ -142,10 +170,12 @@ void miniGit::commit() {
                 } 
             } //check if the files are the same
             if (!same) {
+                currFile.clear();
+                currFile.seekg(0,ios::beg);
                 int lastIndex = it->fileVersion.find_last_of('.');
                 int newVersionNum = stoi(it->fileVersion.substr(lastIndex-2,lastIndex)) +1; //calculate new version number
                 it->fileVersion = it->fileVersion.substr(0,lastIndex-2) + "0" + to_string(newVersionNum) + it->fileVersion.substr(lastIndex); //change the name of the file in LL
-                ofstream newVersion("./.minigit/" + it->fileVersion); //create new version file in .minigit
+                ofstream newVersion(".minigit/" + it->fileVersion); //create new version file in .minigit
                 string text;
                 while (getline(currFile,text)) {
                     newVersion << text; //copy current file into .minigit copy
@@ -163,26 +193,31 @@ void miniGit::commit() {
 
 
 void miniGit::checkout() {
+    if (!head) {
+        cout << "No repository to checkout." << endl;
+        return;
+    }
     int commitNum;
-    cout << "Enter the version number to checkout." << endl;
+    cout << "Enter the version number to checkout. Enter -1 to return to current version" << endl;
     cin >> commitNum;
-    while (commitNum >= currVersion->commitNumber || commitNum < 0) {
+    while (commitNum >= currVersion->commitNumber || commitNum < -1) {
         cout << "invalid version number, try again." << endl;
         cin >> commitNum;       
     }
+    if (commitNum == -1) commitNum = currVersion->previous->commitNumber;
 
     versionNode = head;
     for (versionNode; versionNode->commitNumber != commitNum; versionNode = versionNode->next); // find the node you want to check out
 
     for (const auto &entry : fs::directory_iterator("./")) {
-        if (entry.path() != "./.minigit") {
+        if (entry.path() != "./.minigit" && entry.path() != "./a.out") {
             remove(entry.path());
         }
     } //remove everything besides .minigit subdirectory
 
     for (miniGitFiles* versionFiles = versionNode->head; versionFiles != NULL; versionFiles = versionFiles->next) {
-        ofstream newFiles("./" + versionFiles->fileName);
-        ifstream loadedFiles("./.minigit/" + versionFiles->fileVersion);
+        ofstream newFiles(versionFiles->fileName);
+        ifstream loadedFiles(".minigit/" + versionFiles->fileVersion);
 
         string text;
         while(getline(loadedFiles,text)) {
