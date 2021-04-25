@@ -220,6 +220,13 @@ void miniGit::checkout() {
         std::cout << "No repository to checkout." << endl << endl;
         return;
     }
+        
+    std::cout << "WARNING: Non commited changes will be lost!" << endl;
+    std::cout << "Enter y to continue, anything else to exit" << endl;
+    string cont;
+    cin >> cont;
+    if (cont != "y") return;
+
     int commitNum;
     std::cout << "Enter the version number to checkout. Enter -1 to return to current version" << endl;
     cin >> commitNum;

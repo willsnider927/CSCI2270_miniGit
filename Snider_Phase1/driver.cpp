@@ -41,8 +41,8 @@ int main() {
         case 6:
             repo.delGit();
             return 0;
-            break;
         default:
+            std::cout << "Please enter a valid command" << endl << endl;
             break;
         }
     }

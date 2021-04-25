@@ -8,10 +8,11 @@ namespace fs = std::filesystem;
 int main() {
     miniGit repo;
     if (fs::exists(".minigit/.minigit.txt")) {
+        std::cout << "Found repository, reconstructing the data..." << endl;
         repo.deserialise();
     }
     else {
-        std::cout << "Actions: (please type the number next to the action)" << endl;
+        std::cout << "No repository found, please initialize." << endl;
         std::cout << "  (1). init" << endl;
         string request;
         cin >> request;
@@ -64,6 +65,7 @@ int main() {
             repo.delGit();
             return 0;
         default:
+            std::cout << "Please enter a valid command" << endl << endl;
             break;
         }
     }

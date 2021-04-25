@@ -220,6 +220,13 @@ void miniGit::checkout() {
         std::cout << "No repository to checkout." << endl << endl;
         return;
     }
+
+    std::cout << "WARNING: Non commited changes will be lost!" << endl;
+    std::cout << "Enter y to continue, anything else to exit" << endl;
+    string cont;
+    cin >> cont;
+    if (cont != "y") return;
+
     int commitNum;
     std::cout << "Enter the version number to checkout. Enter -1 to return to current version" << endl;
     cin >> commitNum;
@@ -281,6 +288,7 @@ void miniGit::diff() {
         std::cout << "File doesn't exist in the most recent commit" << endl << endl;
         return;
     }
+
     ifstream preVersion(".minigit/" + it->fileVersion);
     ifstream currVersion(fileName);
     string preText, currText;
@@ -318,6 +326,7 @@ void miniGit::status() {
         std::cout << "Return to most recent commit first" << endl << endl;
         return;
     }
+
     for (miniGitFiles* it = versionNode->head; it != NULL; it = it->next) {
         if (!fs::exists(it->fileName)) {
             std::cout << "File in previous commit not in working directory: " << it->fileName << endl;
@@ -336,6 +345,8 @@ void miniGit::status() {
                 }
             }
             if (same && getline(currFile,currText)) std::cout << "Modified File: " << it->fileName << endl; //check for additions beyond the previous version
+            currFile.close();
+            preVersion.close();
         }
     }
     std::cout << endl;
@@ -352,6 +363,7 @@ bool miniGit::serialize() { //write to a .txt file with all the info needed to r
         std::cout << "Return to most recent commit first" << endl <<endl;
         return false;
     }
+
     if(fs::exists(".minigit/.minigit.txt")) fs::remove(".minigit/.miniGit.txt");
     ofstream data(".minigit/.minigit.txt");
 
