@@ -7,8 +7,8 @@ namespace fs = std::filesystem;
 
 int main() {
     miniGit repo;
-    if (fs::exists(".minigit")) {
-
+    if (fs::exists(".minigit/.minigit.txt")) {
+        repo.deserialise();
     }
     else {
         cout << "Actions: (please type the number next to the action)" << endl;
@@ -19,8 +19,8 @@ int main() {
             cout << "Type 1 to continue." << endl;
             cin >> request;
         }
+        repo.init();
     }
-    repo.init();
     while(1) {
         cout << "Actions: (please type the number next to the action)" << endl;
         cout << "   (2). add file to next commit" << endl;
@@ -28,6 +28,7 @@ int main() {
         cout << "   (4). commit changes to the repo" << endl;
         cout << "   (5). checkout previous commit" << endl;
         cout << "   (6). exit the program and serialize the data structure, make sure to commit what you need" << endl << endl;
+        cout << "   (7). exit the program and fully deconstruct the repository, files will remain at current checkout" << endl;
         int num;
         cin >> num;
         switch (num)
@@ -45,9 +46,15 @@ int main() {
             repo.checkout();
             break;
         case 6:
+            if (repo.serialize()) {
+                return 0;
+            }
+            else {
+                break;
+            }
+        case 7:
             repo.delGit();
             return 0;
-            break;
         default:
             break;
         }

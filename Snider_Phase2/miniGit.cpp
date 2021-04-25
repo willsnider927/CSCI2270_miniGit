@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include "miniGit.hpp"
 
 namespace fs = std::filesystem;
@@ -124,14 +125,16 @@ void miniGit::removeFile() {
 miniGitFiles* copyLL(miniGitFiles* root) { //helper function to return identical linked list as passed in root
     miniGitFiles* newRoot = new miniGitFiles;
     miniGitFiles* newIterator = newRoot;
+    miniGitFiles* newPrev = newRoot;
     for (miniGitFiles* it = root; it != NULL; it = it->next) {
+        newPrev = newIterator;
         newIterator->fileVersion = it->fileVersion;
         newIterator->fileName = it->fileName;
-        miniGitFiles* nextStep = new miniGitFiles;
-        newIterator->next = nextStep;
-        newIterator = nextStep;
+        newIterator = new miniGitFiles;
+        newPrev->next = newIterator;
     }
-    newIterator = NULL;
+    delete newIterator;
+    newPrev->next = NULL;
     return newRoot;
 }
 
@@ -210,7 +213,7 @@ void miniGit::checkout() {
     for (versionNode; versionNode->commitNumber != commitNum; versionNode = versionNode->next); // find the node you want to check out
 
     for (const auto &entry : fs::directory_iterator("./")) {
-        if (entry.path() != "./.minigit" && entry.path() != "./a.out") {
+        if (entry.path() != "./.minigit" && entry.path().extension() != ".out") {
             remove(entry.path());
         }
     } //remove everything besides .minigit subdirectory
@@ -225,4 +228,69 @@ void miniGit::checkout() {
         }
     }//iterate throught the LL and copy the correct version over to the main directory
     return;
+}
+
+bool miniGit::serialize() { //write to a .txt file with all the info needed to reconstruct the DLL
+    if (!head) {
+        cout << "Nothing to serialise, commit before serialising" <<endl;
+        return false;
+    }
+    if (currVersion->previous != versionNode && currVersion->previous != NULL) {
+        cout << "Return to most recent commit first" << endl;
+        return false;
+    }
+    if(fs::exists(".minigit/.minigit.txt")) fs::remove(".minigit/.miniGit.txt");
+    ofstream data(".minigit/.minigit.txt");
+
+    data << currVersion->commitNumber << endl;
+    for(commitNode* it = head; it!= NULL; it = it->next) {
+        for (miniGitFiles* it2 = it->head; it2 != NULL; it2 = it2->next) {
+            data <<it2->fileName << endl;
+            data <<it2->fileVersion <<endl;
+            data << "</file>" << endl;
+        }
+        data << "</commit>" <<endl;
+    } 
+    return true;
+}
+
+void miniGit::deserialise() {
+    ifstream data(".minigit/.minigit.txt");
+    string text;
+    getline(data,text);
+    int totalCommits = stoi(text);
+    getline(data,text);
+    vector <commitNode*>DLL;
+    for (int i = 0; i <= totalCommits; i++) {
+        commitNode* node = new commitNode;
+        if(i == 0) { //head node
+            node = createCommitNode(i,NULL,NULL);
+            head = node;
+        }
+        else {
+            node = createCommitNode(i,NULL,DLL[i-1]);
+            DLL[i-1]->next = node;
+        }
+        DLL.push_back(node);
+        while(text != "</commit>") {
+            bool version = 0;
+            miniGitFiles* fileNode = new miniGitFiles;
+            fileNode->next = node->head;
+            node->head = fileNode;
+            while(text != "</file>") {
+                if (version) {
+                    fileNode->fileVersion = text;
+                }
+                else {
+                    fileNode->fileName = text;
+                }
+                getline(data,text);
+                version = !version;
+            }
+            getline(data,text);
+        }
+        getline(data,text);
+    }
+    currVersion = DLL.back();
+    versionNode = currVersion->previous;
 }

@@ -24,6 +24,8 @@ class miniGit {
         void removeFile();
         void commit();
         void checkout();
+        bool serialize();
+        void deserialise();
     private:
         commitNode* head = nullptr;
         commitNode* currVersion = nullptr; //the node being prepped for commit

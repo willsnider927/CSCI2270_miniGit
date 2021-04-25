@@ -124,14 +124,16 @@ void miniGit::removeFile() {
 miniGitFiles* copyLL(miniGitFiles* root) { //helper function to return identical linked list as passed in root
     miniGitFiles* newRoot = new miniGitFiles;
     miniGitFiles* newIterator = newRoot;
+    miniGitFiles* newPrev = newRoot;
     for (miniGitFiles* it = root; it != NULL; it = it->next) {
+        newPrev = newIterator;
         newIterator->fileVersion = it->fileVersion;
         newIterator->fileName = it->fileName;
-        miniGitFiles* nextStep = new miniGitFiles;
-        newIterator->next = nextStep;
-        newIterator = nextStep;
+        newIterator = new miniGitFiles;
+        newPrev->next = newIterator;
     }
-    newIterator = NULL;
+    delete newIterator;
+    newPrev->next = NULL;
     return newRoot;
 }
 
@@ -210,7 +212,7 @@ void miniGit::checkout() {
     for (versionNode; versionNode->commitNumber != commitNum; versionNode = versionNode->next); // find the node you want to check out
 
     for (const auto &entry : fs::directory_iterator("./")) {
-        if (entry.path() != "./.minigit" && entry.path() != "./a.out") {
+        if (entry.path() != "./.minigit" && entry.path().extension() != ".out") {
             fs::remove_all(entry.path());
         }
     } //remove everything besides .minigit subdirectory
