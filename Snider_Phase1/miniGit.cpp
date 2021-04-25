@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <string>
 #include "miniGit.hpp"
 
 namespace fs = std::filesystem;
@@ -21,7 +22,9 @@ void miniGit::init() {
     currVersion = head;
     versionNode = head;
     fs::create_directory(".minigit");
+    std::cout << endl;
 }
+
 
 void miniGit::delGit() {
     if(head == NULL) return;
@@ -41,18 +44,18 @@ void miniGit::delGit() {
 
 void miniGit::addFile() {
     if (!head) {
-        cout << "No repository to add to." << endl;
+        std::cout << "No repository to add to." << endl << endl;
         return;
     }
     if (currVersion->previous != versionNode && currVersion->previous != NULL) {
-        cout << "Return to most recent commit first" << endl;
+        std::cout << "Return to most recent commit first" << endl << endl;
         return;
     }    
     string fileName;
-    cout << "Enter the file name to be added." << endl;
+    std::cout << "Enter the file name to be added." << endl;
     cin >> fileName;
     while (!fs::exists(fileName)) {
-        cout << "File not found, try again." << endl;
+        std::cout << "File not found, try again." << endl;
         cin >> fileName;
     } //check for valid file name
 
@@ -60,7 +63,7 @@ void miniGit::addFile() {
     miniGitFiles* lastFile = currFile; //useful for adding if it is allowed to be
     for (currFile; currFile != NULL; currFile = currFile->next) {
         if (currFile->fileName == fileName) {
-            cout << "File already being tracked." << endl;
+            std::cout << "File already being tracked." << endl << endl;
             return;
         }
         lastFile = currFile;
@@ -78,33 +81,34 @@ void miniGit::addFile() {
     else {
         lastFile->next = newFile;
     }
+    std::cout << "File succesfully staged for commit." << endl << endl;
     return;
 }
 
 
 void miniGit::removeFile() {
     if (!head) {
-        cout << "No repository to remove from." << endl;
+        std::cout << "No repository to remove from." << endl << endl;
         return;
     }
     if (currVersion->previous != versionNode && currVersion->previous != NULL) { //make sure they are currently on the right version
-        cout << "Return to most recent commit first" << endl;
+        std::cout << "Return to most recent commit first" << endl << endl;
         return;
     }
     if (currVersion->head == NULL) {
-        cout << "No staged commits to remove." << endl;
+        std::cout << "No staged commits to remove." << endl << endl;
         return;
     }
 
     string fileName;
-    cout << "Enter the file name to be removed." << endl;
+    std::cout << "Enter the file name to be removed." << endl;
     cin >> fileName;
 
     miniGitFiles* fileNode = currVersion->head;
     miniGitFiles* prevNode = fileNode;
     for (fileNode; fileNode->fileName != fileName; fileNode = fileNode->next) { //find node if it exists
         if (fileNode->next == NULL) { //check if fileNode will be NULL
-            cout << "File not being tracked" << endl;
+            std::cout << "File not being tracked" << endl << endl;
             return;
         }  
         prevNode = fileNode;
@@ -117,6 +121,7 @@ void miniGit::removeFile() {
         prevNode->next = fileNode->next;
     }
     delete fileNode;
+    std::cout << "File succesfully removed from staged commit." << endl << endl;
     return;
 }
 
@@ -139,18 +144,27 @@ miniGitFiles* copyLL(miniGitFiles* root) { //helper function to return identical
 
 void miniGit::commit() {
     if (!head) {
-        cout << "No repository to commit to." << endl;
+        std::cout << "No repository to commit to." << endl << endl;
         return;
     }
     if (currVersion->previous != versionNode && currVersion->previous != NULL) {
-        cout << "Return to most recent commit first" << endl;
+        std::cout << "Return to most recent commit first" << endl << endl;
         return;
     }
     if (currVersion->head == NULL) {
-        cout << "No changes to commit" << endl;
+        std::cout << "No changes to commit" << endl << endl;
         return;
     }
+    miniGitFiles* preFile = currVersion->head;
     for (miniGitFiles* it = currVersion->head; it != NULL; it = it->next) { //iterate through LL of current versions files
+        if(!fs::exists(it->fileName)) { //ensure the file exists in working directory
+            std::cout << "Staged file not present in working directory removing from commit: " << it->fileName << endl;
+            if (it == currVersion->head) currVersion->head = it->next;
+            else preFile->next = it->next;
+            delete it;
+            it = preFile;
+            continue;
+        }
         ifstream currFile(it->fileName); //open the current file
         if (!fs::exists(".minigit/" + it->fileVersion)) { //if not present in minigit
             ofstream newGitFile(".minigit/"+it->fileVersion); //create the output file
@@ -159,6 +173,7 @@ void miniGit::commit() {
             while(getline(currFile,text)) {
                 newGitFile << text;
             }
+            newGitFile.close();
         }
         else {
             ifstream prevVersion(".minigit/" + it->fileVersion);
@@ -171,6 +186,7 @@ void miniGit::commit() {
                     break;
                 } 
             } //check if the files are the same
+            if(getline(currFile,currText)) same = 0; // if additions past the end of the file exist
             if (!same) {
                 currFile.clear();
                 currFile.seekg(0,ios::beg);
@@ -182,28 +198,33 @@ void miniGit::commit() {
                 while (getline(currFile,text)) {
                     newVersion << text; //copy current file into .minigit copy
                 }
+                newVersion.close();
             } //if different create new file and modify the LL
+            prevVersion.close();
         }
+        currFile.close();
+        preFile = it;
     }
     //create new doubly linked list
     commitNode* nextVersion = createCommitNode(currVersion->commitNumber + 1,copyLL(currVersion->head),currVersion);
     currVersion->next = nextVersion;
     versionNode = currVersion;
     currVersion = nextVersion;
+    std::cout << "Commit successful, Commit ID: " << versionNode->commitNumber << endl << endl;
     return;
 }
 
 
 void miniGit::checkout() {
-    if (!head) {
-        cout << "No repository to checkout." << endl;
+    if (head->next == NULL) {
+        std::cout << "No repository to checkout." << endl << endl;
         return;
     }
     int commitNum;
-    cout << "Enter the version number to checkout. Enter -1 to return to current version" << endl;
+    std::cout << "Enter the version number to checkout. Enter -1 to return to current version" << endl;
     cin >> commitNum;
     while (commitNum >= currVersion->commitNumber || commitNum < -1) {
-        cout << "invalid version number, try again." << endl;
+        std::cout << "invalid version number, try again." << endl;
         cin >> commitNum;       
     }
     if (commitNum == -1) commitNum = currVersion->previous->commitNumber;
@@ -225,6 +246,9 @@ void miniGit::checkout() {
         while(getline(loadedFiles,text)) {
             newFiles << text;
         }
+        newFiles.close();
+        loadedFiles.close();
     }//iterate throught the LL and copy the correct version over to the main directory
+    std::cout << endl;
     return;
 }

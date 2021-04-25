@@ -5,23 +5,23 @@ using namespace std;
 
 int main() {
     miniGit repo;
-    cout << "Please make sure current repository is clean of .minigit folder before initialization" << endl;
-    cout << "Actions: (please type the number next to the action)" << endl;
-    cout << "  (1). init" << endl;
+    std::cout << "Please make sure current repository is clean of .minigit folder before initialization" << endl;
+    std::cout << "Actions: (please type the number next to the action)" << endl;
+    std::cout << "  (1). init" << endl;
     string request;
     cin >> request;
     while (request != "1") {
-        cout << "Type 1 to continue." << endl;
+        std::cout << "Type 1 to continue." << endl;
         cin >> request;
     }
     repo.init();
     while(1) {
-        cout << "Actions: (please type the number next to the action)" << endl;
-        cout << "   (2). add file to next commit" << endl;
-        cout << "   (3). remove file from next commit" << endl;
-        cout << "   (4). commit changes to the repo" << endl;
-        cout << "   (5). checkout previous commit" << endl;
-        cout << "   (6). exit the program and delete the repo, make sure to be at the commit you want." << endl << endl;
+        std::cout << "Actions: (please type the number next to the action)" << endl;
+        std::cout << "   (2). add file to next commit" << endl;
+        std::cout << "   (3). remove file from next commit" << endl;
+        std::cout << "   (4). commit changes to the repo" << endl;
+        std::cout << "   (5). checkout previous commit" << endl;
+        std::cout << "   (6). exit the program and delete the repo, make sure to be at the commit you want." << endl << endl;
         int num;
         cin >> num;
         switch (num)

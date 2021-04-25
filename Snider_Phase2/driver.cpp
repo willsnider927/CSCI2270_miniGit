@@ -11,24 +11,26 @@ int main() {
         repo.deserialise();
     }
     else {
-        cout << "Actions: (please type the number next to the action)" << endl;
-        cout << "  (1). init" << endl;
+        std::cout << "Actions: (please type the number next to the action)" << endl;
+        std::cout << "  (1). init" << endl;
         string request;
         cin >> request;
         while (request != "1") {
-            cout << "Type 1 to continue." << endl;
+            std::cout << "Type 1 to continue." << endl;
             cin >> request;
         }
         repo.init();
     }
     while(1) {
-        cout << "Actions: (please type the number next to the action)" << endl;
-        cout << "   (2). add file to next commit" << endl;
-        cout << "   (3). remove file from next commit" << endl;
-        cout << "   (4). commit changes to the repo" << endl;
-        cout << "   (5). checkout previous commit" << endl;
-        cout << "   (6). exit the program and serialize the data structure, make sure to commit what you need" << endl << endl;
-        cout << "   (7). exit the program and fully deconstruct the repository, files will remain at current checkout" << endl;
+        std::cout << "Actions: (please type the number next to the action)" << endl;
+        std::cout << "   (2). add file to next commit" << endl;
+        std::cout << "   (3). remove file from next commit" << endl;
+        std::cout << "   (4). commit changes to the repo" << endl;
+        std::cout << "   (5). checkout previous commit" << endl;
+        std::cout << "   (6). diff, find the first difference between file in working directory and previous commit" << endl;
+        std::cout << "   (7). status, find what files have been modified from the previous commit as well as which were removed" << endl;
+        std::cout << "   (8). exit the program and serialize the data structure, make sure to commit what you need" << endl;
+        std::cout << "   (9). exit the program and fully deconstruct the repository, files will remain at current checkout" << endl << endl;
         int num;
         cin >> num;
         switch (num)
@@ -46,13 +48,19 @@ int main() {
             repo.checkout();
             break;
         case 6:
+            repo.diff();
+            break;
+        case 7:
+            repo.status();
+            break;
+        case 8:
             if (repo.serialize()) {
                 return 0;
             }
             else {
                 break;
             }
-        case 7:
+        case 9:
             repo.delGit();
             return 0;
         default:

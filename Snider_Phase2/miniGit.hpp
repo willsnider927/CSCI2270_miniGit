@@ -24,6 +24,8 @@ class miniGit {
         void removeFile();
         void commit();
         void checkout();
+        void diff();
+        void status();
         bool serialize();
         void deserialise();
     private:
