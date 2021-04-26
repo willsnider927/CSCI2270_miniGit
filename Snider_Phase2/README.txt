@@ -8,7 +8,8 @@ Phase 2 extra features:
 
 The ability to exit and reopen the program with the repo still intact is now possible, the data structure will
 be written to .minigit.txt in the .minigit directory. Upon relaunching the program, this file will be looked for
-and initialization will be skipped if it is found.
+and initialization will be skipped if it is found. Two different quit options are present in case deconstruction of 
+the repo is desired.
 
 Status and Diff have also been implemented and can be called when prompted. Status will display files in the working
 directory that have been changed from the most recent commit as well as ones which are no longer present in the
