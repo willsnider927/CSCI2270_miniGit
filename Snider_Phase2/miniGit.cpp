@@ -221,11 +221,13 @@ void miniGit::checkout() {
         return;
     }
 
-    std::cout << "WARNING: Non commited changes will be lost!" << endl;
-    std::cout << "Enter y to continue, anything else to exit" << endl;
-    string cont;
-    cin >> cont;
-    if (cont != "y") return;
+    if (currVersion->previous == versionNode) {
+        std::cout << "WARNING: Non commited changes will be lost!" << endl;
+        std::cout << "Enter y to continue, anything else to exit" << endl;
+        string cont;
+        cin >> cont;
+        if (cont != "y") return;
+    }
 
     int commitNum;
     std::cout << "Enter the version number to checkout. Enter -1 to return to current version" << endl;

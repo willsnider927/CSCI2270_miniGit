@@ -23,7 +23,13 @@ int main() {
         std::cout << "   (5). checkout previous commit" << endl;
         std::cout << "   (6). exit the program and delete the repo, make sure to be at the commit you want." << endl << endl;
         int num;
-        cin >> num;
+        string input;
+        cin >> input;
+        try{
+            num = stoi(input);   
+        } catch(...) {
+            num = 0;
+        }
         switch (num)
         {
         case 2:

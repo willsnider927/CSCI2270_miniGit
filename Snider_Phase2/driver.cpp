@@ -33,7 +33,13 @@ int main() {
         std::cout << "   (8). exit the program and serialize the data structure, make sure to commit what you need" << endl;
         std::cout << "   (9). exit the program and fully deconstruct the repository, files will remain at current checkout" << endl << endl;
         int num;
-        cin >> num;
+        string input;
+        cin >> input;
+        try{
+            num = stoi(input);   
+        } catch(...) {
+            num = 0;
+        }
         switch (num)
         {
         case 2:

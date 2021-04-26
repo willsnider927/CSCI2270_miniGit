@@ -31,5 +31,5 @@ class miniGit {
     private:
         commitNode* head = nullptr;
         commitNode* currVersion = nullptr; //the node being prepped for commit
-        commitNode* versionNode = nullptr; //the most recently commited node
+        commitNode* versionNode = nullptr; //the Node currently being checked out
 };
