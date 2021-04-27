@@ -357,7 +357,7 @@ void miniGit::status() {
 
 
 bool miniGit::serialize() { //write to a .txt file with all the info needed to reconstruct the DLL
-    if (!head) {
+    if (head->next == NULL) {
         std::cout << "Nothing to serialise, commit before serialising" <<endl <<endl;;
         return false;
     }
